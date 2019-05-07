@@ -1,4 +1,4 @@
-package mysql
+package postgresql
 
 import (
 	"database/sql"
@@ -36,10 +36,15 @@ type Conn struct {
 	db     *sql.DB
 	schema string
 	table  string
+	Role   string
 }
 
 // HasTable check if the schema has the migration table.
 func (c *Conn) HasTable() (bool, error) {
+	if _, err := c.db.Exec(fmt.Sprintf(`SET ROLE "%s"`, c.Role)); err != nil {
+		return false, err
+	}
+
 	var name string
 	err := c.db.QueryRow(`SELECT table_name FROM information_schema.tables WHERE table_catalog = $1 AND table_name = $2`, c.schema, c.table).Scan(&name)
 	if err != nil && err != sql.ErrNoRows {

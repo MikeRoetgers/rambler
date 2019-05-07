@@ -6,10 +6,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/MikeRoetgers/rambler/driver/postgresql"
 	"github.com/bradfitz/slice"
 	"github.com/elwinar/rambler/driver"
 	_ "github.com/elwinar/rambler/driver/mysql"
-	_ "github.com/elwinar/rambler/driver/postgresql"
 	_ "github.com/elwinar/rambler/driver/sqlite"
 )
 
@@ -39,6 +39,11 @@ func NewService(env Environment) (*Service, error) {
 	conn, err := driver.Get(env.Driver, env.DSN(), env.Database, env.Table)
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize driver: %s", err.Error())
+	}
+
+	switch v := conn.(type) {
+	case *postgresql.Conn:
+		v.Role = env.Role
 	}
 
 	return &Service{
